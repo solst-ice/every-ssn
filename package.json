@@ -1,7 +1,7 @@
 {
   "name": "every-ssn",
   "version": "1.0.0",
-  "homepage": "https://solst-ice.github.io/every-ssn",
+  "homepage": "https://every-ssn.com/",
   "description": "in case I forget one",
   "scripts": {
     "predeploy": "npm run build",
@@ -10,7 +10,7 @@
     "predev": "rimraf .parcel-cache dist",
     "dev": "parcel public/index.html",
     "prebuild": "rimraf .parcel-cache dist",
-    "build": "parcel build public/index.html --public-url /every-ssn/",
+    "build": "parcel build public/index.html",
     "new-component": "new-component"
   },
   "keywords": [],
