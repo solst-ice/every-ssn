@@ -6,7 +6,7 @@ A searchable list of every SSN, just in case you've forgotten one and need to lo
 
 Almost one hundred years ago, the U.S. government created the Social Security Number (SSN) for the sole purpose of tracking the earnings histories of workers.
 
-This ultimately was widely considered as a bad move.
+This ultimately was widely considered as a bad move, as it was used for purposes far beyond its original intent.
 
 ## What Can I do with an SSN
 

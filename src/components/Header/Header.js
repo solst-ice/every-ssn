@@ -134,7 +134,7 @@ function Header() {
       </TitleSubhead>
       <SelfPromotion>
         <Socials>
-          <SocialLink href="https://github.com/solst-ice/every-ssn">
+          <SocialLink href="https://github.com/solst-ice/every-ssn?tab=readme-ov-file#every-ssn">
             <Help />
           </SocialLink>
           <SocialLink href="https://twitter.com/IceSolst">
