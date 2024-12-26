@@ -5,11 +5,11 @@
   "description": "in case I forget one",
   "scripts": {
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d dist",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "predev": "rimraf .parcel-cache build",
+    "predev": "rimraf .parcel-cache dist",
     "dev": "parcel public/index.html",
-    "prebuild": "rimraf .parcel-cache build",
+    "prebuild": "rimraf .parcel-cache dist",
     "build": "parcel build public/index.html",
     "new-component": "new-component"
   },
