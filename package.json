@@ -7,9 +7,9 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "predev": "rimraf .parcel-cache dist",
+    "predev": "rimraf .parcel-cache build",
     "dev": "parcel public/index.html",
-    "prebuild": "rimraf .parcel-cache dist",
+    "prebuild": "rimraf .parcel-cache build",
     "build": "parcel build public/index.html",
     "new-component": "new-component"
   },
