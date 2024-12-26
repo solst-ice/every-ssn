@@ -1,16 +1,15 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
 import UnstyledButton from "../UnstyledButton/UnstyledButton";
-import { indexToUUID, intToUUID } from "../../../lib/uuidTools";
 import {
   querySmallScreen,
   queryVerySmallScreen,
   SCROLLBAR_WIDTH,
-  MAX_UUID,
   ITEM_HEIGHT,
   WIDTH_TO_SHOW_DOUBLE_HEIGHT,
 } from "../../../lib/constants";
 import { ClipboardCopy, Star } from "../Icons";
+import { getStateFromAreaNumber } from "../../../lib/stateMapping";
 
 const BaseButton = styled(UnstyledButton)`
   height: 100%;
@@ -116,9 +115,9 @@ const RowWrapper = styled.div`
   display: grid;
   padding: 0.25rem 0;
 
-  grid-template-areas: "index colon uuid copy favorite copied";
+  grid-template-areas: "index colon uuid state copy favorite copied";
   grid-template-rows: 100%;
-  grid-template-columns: repeat(5, fit-content(15px));
+  grid-template-columns: repeat(7, fit-content(15px));
   gap: 0.25rem 0.5rem;
   align-items: center;
 
@@ -129,18 +128,11 @@ const RowWrapper = styled.div`
   border-bottom: 1px solid var(--border-color);
   height: ${ITEM_HEIGHT}px;
 
-  @media (hover: hover) {
-    &:hover {
-      background-color: var(--slate-400);
-    }
-  }
-
-  background-color: var(--row-background, transparent);
-  transition: background-color 0.1s ease-in-out;
-
   @media ${querySmallScreen} {
-    grid-template-columns: repeat(2, fit-content(0));
-    grid-template-areas: "index copy favorite" "uuid copy favorite";
+    grid-template-columns: repeat(4, fit-content(0));
+    grid-template-areas: 
+      "index copy favorite state" 
+      "uuid copy favorite state";
     grid-template-rows: 50% 50%;
     height: ${ITEM_HEIGHT * 2}px;
     justify-content: center;
@@ -255,6 +247,14 @@ const Highlight = styled.span`
   background-color: yellow;
 `;
 
+const State = styled.span`
+  grid-area: state;
+  color: var(--slate-600);
+  font-size: 0.75em;
+  white-space: nowrap;
+  margin-right: 1rem;
+`;
+
 function Row({
   index,
   uuid,
@@ -265,7 +265,7 @@ function Row({
 }) {
   const indexString = index.toString();
   const length = indexString.length;
-  const padLength = 37;
+  const padLength = 9;
   const paddingLength = padLength - length;
   let padding;
   if (paddingLength < 0) {
@@ -278,6 +278,10 @@ function Row({
   const [mouseDown, setMouseDown] = React.useState(false);
   const [justCopied, setJustCopied] = React.useState(0);
   const timeoutRef = React.useRef(null);
+
+  // Get area number from SSN
+  const areaNumber = parseInt(uuid.split('-')[0], 10);
+  const state = getStateFromAreaNumber(areaNumber);
 
   const handleCopy = React.useCallback(async () => {
     clearTimeout(timeoutRef.current);
@@ -343,12 +347,13 @@ function Row({
         backgroundColor: mouseDown ? "var(--slate-500)" : null,
       }}
     >
-      <IndexWithPadding style={{ gridArea: "index" }}>
+      <IndexWithPadding style={{ gridArea: "index", marginRight: "1rem" }}>
         <Padding>{padding}</Padding>
         <Index>{indexString}</Index>
       </IndexWithPadding>
-      <Colon />
-      <UUID>{UUIDToDisplay}</UUID>
+      <Colon style={{ marginRight: "1rem" }} />
+      <UUID style={{ marginRight: "1rem" }}>{UUIDToDisplay}</UUID>
+      <State style={{ width: "200px" }}>{state || 'No state found'}</State>
       <CopyButton onClick={handleCopy} $rowMouseDown={mouseDown}>
         <ClipboardCopy style={{ height: "100%", aspectRatio: 1 }} />
       </CopyButton>
@@ -605,12 +610,13 @@ function UUIDDisplay({
   return (
     <Wrapper ref={ref} onKeyDown={handleKeyDown} tabIndex={0}>
       <List>
-        {displayedUUIDs.map(({ index, uuid }, i) => {
+        {displayedUUIDs.map(({ index, uuid, state }, i) => {
           return (
             <Row
               key={i}
               index={index}
               uuid={uuid}
+              state={state}
               isFaved={favedUUIDs[uuid]}
               toggleFavedUUID={toggleFavedUUID}
               search={search}

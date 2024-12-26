@@ -4,11 +4,15 @@ import {
   WIDTH_TO_SHOW_DOUBLE_HEIGHT,
   querySmallScreen,
 } from "../../../lib/constants";
-import { Code, Twitter, Bsky, Help } from "../Icons/Icons";
+import { Code, Twitter, Help } from "../Icons/Icons";
 const SUBHEADS = [
   "In case you forgot one",
   "Scroll till you find a good one",
-  "Well, only the V4 ones",
+  "Pick a random one you like",
+  "Yours is in here somewhere",
+  "Find your neighbor's",
+  "Shopping for a new one?",
+  "Tweet your favorite one",
 ];
 
 const Wrapper = styled.header`
@@ -115,10 +119,6 @@ const Socials = styled.div`
   }
 `;
 
-const V4Small = styled.sup`
-  font-size: 0.75rem;
-`;
-
 function Header() {
   const subhead = React.useMemo(() => {
     return SUBHEADS[Math.floor(Math.random() * SUBHEADS.length)];
@@ -128,27 +128,21 @@ function Header() {
     <Wrapper>
       <TitleSubhead>
         <TitleLink href="/">
-          <Title>Every UUID Dot Com</Title>
+          <Title>Every SSN, Leaked!</Title>
         </TitleLink>
         <Subhead>{subhead}</Subhead>
       </TitleSubhead>
       <SelfPromotion>
         <Socials>
-          <SocialLink href="https://eieio.games/blog/writing-down-every-uuid">
+          <SocialLink href="https://github.com/solst-ice/every-ssn">
             <Help />
           </SocialLink>
-          <SocialLink href="https://github.com/nolenroyalty/every-uuid">
-            <Code />
-          </SocialLink>
-          <SocialLink href="https://twitter.com/itseieio">
+          <SocialLink href="https://twitter.com/IceSolst">
             <Twitter />
-          </SocialLink>
-          <SocialLink href="https://bsky.app/profile/itseieio.bsky.social">
-            <Bsky />
           </SocialLink>
         </Socials>
         <p>
-          A website by <Link href="https://eieio.games">eieio</Link>
+          Forked by solst/ice from <Link href="https://eieio.games">eieio</Link>
         </p>
       </SelfPromotion>
     </Wrapper>
