@@ -142,7 +142,7 @@ function Header() {
           </SocialLink>
         </Socials>
         <p>
-          Forked by solst/ice from <Link href="https://eieio.games">eieio</Link>
+          Forked by <Link href="https://twitter.com/IceSolst">solst/ice</Link> from <Link href="https://eieio.games">eieio</Link>
         </p>
       </SelfPromotion>
     </Wrapper>
