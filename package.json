@@ -1,8 +1,11 @@
 {
-  "name": "every-uuid",
+  "name": "every-ssn",
   "version": "1.0.0",
+  "homepage": "https://solst-ice.github.io/every-ssn",
   "description": "in case I forget one",
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "predev": "rimraf .parcel-cache dist",
     "dev": "parcel public/index.html",
@@ -11,7 +14,7 @@
     "new-component": "new-component"
   },
   "keywords": [],
-  "author": "nolen (eieio)",
+  "author": "solst/ice",
   "license": "ISC",
   "dependencies": {
     "eslint": "^8.57.1",
@@ -27,5 +30,8 @@
     "rimraf": "^6.0.1",
     "styled-components": "^6.1.13"
   },
-  "browserslist": ">0.3%, defaults, supports es6-module"
+  "browserslist": ">0.3%, defaults, supports es6-module",
+  "devDependencies": {
+    "gh-pages": "^6.2.0"
+  }
 }
