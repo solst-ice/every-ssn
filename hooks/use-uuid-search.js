@@ -2,12 +2,9 @@ import React from "react";
 import { uuidToIndex, indexToUUID } from "../lib/uuidTools";
 import { MAX_UUID } from "../lib/constants";
 const PADDING_SENTINEL = "X";
-const VARIANT_SENTINEL = "V";
-const VERSION = "4";
-const VALID_VARIANTS = ["8", "9", "a", "b"];
 
 function getPatternWithPadding(search, leftPadding) {
-  const uuidTemplate = `${PADDING_SENTINEL.repeat(8)}-${PADDING_SENTINEL.repeat(4)}-${VERSION}${PADDING_SENTINEL.repeat(3)}-${VARIANT_SENTINEL}${PADDING_SENTINEL.repeat(3)}-${PADDING_SENTINEL.repeat(12)}`;
+  const uuidTemplate = `001-01-0001`;
 
   for (let pos = 0; pos < search.length; pos++) {
     const patternPos = leftPadding + pos;
@@ -20,14 +17,6 @@ function getPatternWithPadding(search, leftPadding) {
     ) {
       return null;
     }
-
-    if (patternPos === 14 && inputChar !== VERSION) {
-      return null;
-    }
-
-    if (patternPos === 19 && !VALID_VARIANTS.includes(inputChar)) {
-      return null;
-    }
   }
 
   const pattern =
@@ -37,11 +26,9 @@ function getPatternWithPadding(search, leftPadding) {
 
   const sections = pattern.split("-");
   if (
-    sections[0].length === 8 &&
-    sections[1].length === 4 &&
-    sections[2].length === 4 &&
-    sections[3].length === 4 &&
-    sections[4].length === 12
+    sections[0].length === 3 &&
+    sections[1].length === 2 &&
+    sections[2].length === 4 
   ) {
     return pattern;
   }
@@ -51,7 +38,7 @@ function getPatternWithPadding(search, leftPadding) {
 
 function getAllValidPatterns(search) {
   const patterns = [];
-  const uuidTemplate = `${PADDING_SENTINEL.repeat(8)}-${PADDING_SENTINEL.repeat(4)}-${VERSION}${PADDING_SENTINEL.repeat(3)}-${VARIANT_SENTINEL}${PADDING_SENTINEL.repeat(3)}-${PADDING_SENTINEL.repeat(12)}`;
+  const uuidTemplate = `001-01-0001`;
 
   for (
     let leftPadding = 0;
@@ -68,20 +55,43 @@ function getAllValidPatterns(search) {
 }
 
 function generateRandomUUID(pattern) {
-  return pattern
-    .replace(
-      new RegExp(VARIANT_SENTINEL, "g"),
-      () => VALID_VARIANTS[Math.floor(Math.random() * VALID_VARIANTS.length)]
-    )
-    .replace(
-      new RegExp(PADDING_SENTINEL, "g"),
-      () => "0123456789abcdef"[Math.floor(Math.random() * 16)]
-    );
+  // Try up to 100 times to generate a valid SSN
+  for (let attempts = 0; attempts < 100; attempts++) {
+    const result = pattern
+      .replace(
+        new RegExp(PADDING_SENTINEL, "g"),
+        () => "0123456789"[Math.floor(Math.random() * 10)]
+      );
+
+    // Validate the generated SSN
+    const [area, group, serial] = result.split('-').map(n => parseInt(n, 10));
+    
+    // Check area number (001-899, excluding 666)
+    if (area <= 0 || area >= 900 || area === 666) {
+      continue;
+    }
+
+    // Check group number (01-99) 
+    if (group <= 0 || group > 99) {
+      continue;
+    }
+
+    // Check serial number (0001-9999)
+    if (serial <= 0 || serial > 9999) {
+      continue;
+    }
+
+    return result;
+  }
+
+  // If we couldn't generate a valid SSN after max attempts, return a default valid SSN
+  console.warn("Could not generate valid SSN after max attempts");
+  return "001-01-0001";
 }
 
 const SEARCH_LOOKBACK = 50;
 const SEARCH_LOOKAHEAD = 25;
-const RANDOM_SEARCH_ITERATIONS = 100;
+const RANDOM_SEARCH_ITERATIONS = 1000;
 
 export function useUUIDSearch({ virtualPosition, displayedUUIDs }) {
   const [search, setSearch] = React.useState(null);
@@ -218,11 +228,11 @@ export function useUUIDSearch({ virtualPosition, displayedUUIDs }) {
 
   const searchUUID = React.useCallback(
     (input) => {
-      const invalid = input.toLowerCase().replace(/[^0-9a-f-]/g, "");
+      const invalid = input.toLowerCase().replace(/[^0-9-]/g, "");
       if (invalid !== input) {
         return null;
       }
-      const newSearch = input.toLowerCase().replace(/[^0-9a-f-]/g, "");
+      const newSearch = input.toLowerCase().replace(/[^0-9-]/g, "");
       if (!newSearch) return null;
 
       // Clear next states stack when search changes

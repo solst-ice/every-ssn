@@ -219,7 +219,7 @@ function SearchWidget({
           <Input
             ref={inputRef}
             type="text"
-            placeholder="Search for a UUID"
+            placeholder="Search for an SSN"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value.toLowerCase());
@@ -244,43 +244,6 @@ function SearchWidget({
 
 export default SearchWidget;
 
-/* KEPT FOR THE BLOG */
-/* this is just code that didn't work as I tried to figure out how to handle
-   searching */
-
-// this isn't perfect, but we'll take it
-function isValidSearchString(search) {
-  const matchesNonHexDash = search.match(/[^0-9a-f-]/i);
-  if (matchesNonHexDash) {
-    return false;
-  }
-  const dashCount = (search.match(/-/g) || []).length;
-  if (dashCount > 4) {
-    return false;
-  }
-  if (search.length > 36) {
-    return false;
-  }
-  const chunks = search.split("-");
-  if (chunks.some((chunk) => chunk.length > 12)) {
-    return false;
-  }
-  const greaterThan4 = chunks.filter((chunk) => chunk.length > 4).length;
-  if (greaterThan4 > 2) {
-    return false;
-  }
-  const greaterThan8 = chunks.filter((chunk) => chunk.length > 8).length;
-  if (greaterThan8 > 1) {
-    return false;
-  }
-  if ((greaterThan8 > 1 && greaterThan4 > 1) || greaterThan4 > 2) {
-    if (chunks.length !== 5) {
-      return false;
-    }
-  }
-  return true;
-}
-
 // https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
 function splitmix32(a) {
   return function () {
@@ -295,9 +258,9 @@ function splitmix32(a) {
 }
 
 const KINDS = {
-  twelve: 12,
-  eight: 8,
   four: 4,
+  three: 3,
+  two: 2,
 };
 
 function selectableIndices(kind, chunks) {
@@ -316,98 +279,91 @@ const emptySearchIndex = (index, maxChars) => ({
   value: null,
 });
 
-function candidatesForSearchString(search, rand) {
-  const randInt = (high) => Math.floor(rand() * high);
+function candidatesForSearchString(search) {
+  // Clean the input to only keep numbers and dashes
+  const cleaned = search.replace(/[^\d-]/g, '');
+  if (!cleaned) return null;
 
-  const randHexChar = () => {
-    const digit = randInt(16);
-    return digit.toString(16);
+  // Helper function to validate area number
+  const isValidArea = (area) => {
+    const areaNum = parseInt(area, 10);
+    return areaNum > 0 && areaNum < 900 && areaNum !== 666;
   };
 
-  const chunks = search.split("-");
-  const indices = [
-    emptySearchIndex(0, 8),
-    emptySearchIndex(1, 4),
-    emptySearchIndex(2, 4),
-    emptySearchIndex(3, 4),
-    emptySearchIndex(4, 12),
-  ];
+  // Helper function to validate group number
+  const isValidGroup = (group) => {
+    const groupNum = parseInt(group, 10);
+    return groupNum > 0 && groupNum <= 99;
+  };
 
-  const chunksWithMetadata = chunks.map((chunk, index) => ({
-    index,
-    chunk,
-    greaterThan4: chunk.length > 4,
-    greaterThan8: chunk.length > 8,
-  }));
+  // Helper function to validate serial number
+  const isValidSerial = (serial) => {
+    const serialNum = parseInt(serial, 10);
+    return serialNum > 0 && serialNum <= 9999;
+  };
 
-  // const chunksSortedByLength = [...chunks].map((chunk, i) => {chunk, i}
-  //   sort((a, b) => b.length - a.length);
-  const greaterThan8 = chunks.filter((chunks) => chunks.length > 8);
-  const greaterThan4 = chunks.filter((chunks) => chunks.length > 4);
-  if (greaterThan8.length > 0 && greaterThan4.length > 0) {
-  }
-
-  let minIndex = 0;
-  for (const chunk of chunks) {
-    let found = false;
-    for (let i = minIndex; i < indices.length; i++) {
-      const index = indices[i];
-      if (index.maxChars >= chunk.length && index.value === null) {
-        found = true;
-        minIndex = i;
-        index.value = chunk;
-        break;
-      }
-    }
-    if (!found) {
-      return null;
-    }
-  }
-  // const choices = indices.filter((index, indexIdx) => {
-  //   return index.maxChars >= chunk.length && index.value === null;
-  // });
-  // if (choices.length === 0) {
-  //   return null;
-  // }
-  // // const choice = choices[randInt(choices.length)];
-  // const choice = choices[0];
-  // choice.value = chunk;
-  // chunkIdx++;
-
-  for (const index of indices) {
-    if (index.value === null) {
-      index.value = "0".repeat(index.maxChars);
-    } else if (index.value.length < index.maxChars) {
-      const remaining = index.maxChars - index.value.length;
-      index.value += "0".repeat(remaining);
-      // index.value = index.value + randHexChar();
+  // Handle non-dashed input
+  if (!cleaned.includes('-')) {
+    const len = cleaned.length;
+    if (len === 0) return null;
+    
+    // Pad with valid numbers based on position
+    if (len <= 4) {
+      // Assume it's the last part
+      const serial = cleaned.padEnd(4, '1');
+      return isValidSerial(serial) ? `001-01-${serial}` : null;
+    } else if (len <= 6) {
+      // Assume starts at group number
+      const group = cleaned.slice(0, 2).padEnd(2, '1');
+      const serial = cleaned.slice(2).padEnd(4, '1');
+      return (isValidGroup(group) && isValidSerial(serial)) ? 
+        `001-${group}-${serial}` : null;
+    } else {
+      // Assume starts at area number
+      const area = cleaned.slice(0, 3);
+      const group = cleaned.slice(3, 5).padEnd(2, '1');
+      const serial = cleaned.slice(5, 9).padEnd(4, '1');
+      return (isValidArea(area) && isValidGroup(group) && isValidSerial(serial)) ? 
+        `${area}-${group}-${serial}` : null;
     }
   }
 
-  return indices.map((index) => index.value).join("-");
+  // Handle dashed input
+  const parts = cleaned.split('-');
+  const [area = '', group = '', serial = ''] = parts;
+
+  const paddedArea = area.padEnd(3, '1');
+  const paddedGroup = group.padEnd(2, '1');
+  const paddedSerial = serial.padEnd(4, '1');
+
+  // Validate all parts
+  if (!isValidArea(paddedArea) || !isValidGroup(paddedGroup) || !isValidSerial(paddedSerial)) {
+    return null;
+  }
+
+  return `${paddedArea}-${paddedGroup}-${paddedSerial}`;
 }
 
 function createUUIDPattern(input) {
   // Clean input to valid hex chars and dashes
-  const cleaned = input.toLowerCase().replace(/[^0-9a-f-]/g, "");
+  const cleaned = input.toLowerCase().replace(/[^0-9-]/g, "");
   if (!cleaned) return null;
 
-  // Template with version (4) and variant (8) enforced
-  const uuidTemplate = `00000000-0000-4000-8000-000000000000`;
-  const variantChars = new Set(["8", "9", "a", "b", "c", "d"]);
+  // Template for SSN 
+  const ssnTemplate = `000-00-0000`;
 
   // Single chunk case (no dashes)
   if (!cleaned.includes("-")) {
     const len = cleaned.length;
-    // Need to handle special cases where input might conflict with version/variant
+    // Handle different length inputs by padding appropriately
     if (len <= 4) {
-      return `00000000-${cleaned.padEnd(4, "0")}-4000-8000-000000000000`;
+      return `000-00-${cleaned.padEnd(4, "0")}`;
     }
-    if (len <= 8) {
-      return `${cleaned.padEnd(8, "0")}-0000-4000-8000-000000000000`;
+    if (len <= 6) {
+      return `000-${cleaned.padEnd(2, "0")}-${cleaned.substring(2).padEnd(4, "0")}`;
     }
-    if (len <= 12) {
-      return `00000000-0000-4000-8000-${cleaned.padEnd(12, "0")}`;
+    if (len <= 9) {
+      return `${cleaned.substring(0,3)}-${cleaned.substring(3,5)}-${cleaned.substring(5).padEnd(4, "0")}`;
     }
     return null;
   }
@@ -427,7 +383,7 @@ function createUUIDPattern(input) {
       for (let pos = 0; pos < cleaned.length; pos++) {
         const patternPos = i + pos;
         const inputChar = cleaned[pos];
-        const templateChar = uuidTemplate[patternPos];
+        const templateChar = ssnTemplate[patternPos];
 
         if (inputChar === "-") {
           if (templateChar !== "-") {
@@ -438,18 +394,21 @@ function createUUIDPattern(input) {
           dashesAlign = false;
           break;
         } else {
-          // Check for version (4) conflict
-          if (patternPos === 14 && inputChar !== "4") {
-            // Position after second dash
+          // Validate numeric characters
+          if (isNaN(parseInt(inputChar))) {
             wouldConflict = true;
             break;
           }
-          // Check for variant conflict
-          if (patternPos === 19) {
-            // Position after third dash
-            if (!variantChars.has(inputChar)) {
-              wouldConflict = true;
-              break;
+          
+          // Check area number (first 3 digits)
+          if (patternPos < 3) {
+            const areaStr = cleaned.substring(0, 3);
+            if (areaStr.length === 3) {
+              const area = parseInt(areaStr);
+              if (area === 666 || area === 0) {
+                wouldConflict = true;
+                break;
+              }
             }
           }
         }
@@ -464,14 +423,12 @@ function createUUIDPattern(input) {
       cleaned +
       uuidTemplate.slice(i + cleaned.length);
 
-    // Verify it's a valid UUID pattern (all sections have correct length)
+    // Verify it's a valid SSN pattern 
     const sections = result.split("-");
     if (
-      sections[0].length === 8 &&
-      sections[1].length === 4 &&
-      sections[2].length === 4 &&
-      sections[3].length === 4 &&
-      sections[4].length === 12
+      sections[0].length === 3 &&
+      sections[1].length === 2 &&
+      sections[2].length === 4
     ) {
       return result;
     }
