@@ -7,6 +7,6 @@
     "parcel-reporter-static-files-copy"
   ],
   "optimizers": {
-    "*.html": ["@parcel/optimizer-htmlnull"]
+    "*.html": []
   }
 }
